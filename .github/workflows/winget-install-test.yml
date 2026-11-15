@@ -61,10 +61,10 @@ jobs:
           $arguments = @('install', '--manifest', "`"$manifest`"", '--architecture', '${{ matrix.architecture }}', '--scope', 'user', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity', '--verbose-logs')
           $process = Start-Process -FilePath (Get-Command winget).Source -ArgumentList $arguments -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
           if (-not $process.WaitForExit(60000)) {
-            Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'winget|setup|vektkove' } | Select-Object Name, CommandLine | Format-List | Out-String | Write-Host
+            Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'winget|setup|vektkove|\.tmp' } | Select-Object Name, CommandLine | Format-List | Out-String | Write-Host
             Get-Content $stdout, $stderr -ErrorAction SilentlyContinue | Write-Host
             $logDir = Join-Path $env:LOCALAPPDATA 'Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/DiagOutputDir'
-            Get-ChildItem $logDir -Filter '*.log' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Get-Content -Tail 100 | Write-Host
+            Get-ChildItem $logDir -Filter 'WinGet-VCCcash*.log' -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "Installer log: $($_.FullName)"; Get-Content $_.FullName -Tail 100 | Write-Host }
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             throw 'WinGet installation timed out'
           }
