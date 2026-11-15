@@ -66,13 +66,6 @@ jobs:
             $logDir = Join-Path $env:LOCALAPPDATA 'Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/DiagOutputDir'
             Get-ChildItem $logDir -Filter 'WinGet-VCCcash*.log' -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "Installer log: $($_.FullName)"; Get-Content $_.FullName -Tail 100 | Write-Host }
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
-            $downloadDir = Join-Path $env:TEMP 'WinGet/VCCcash.Vektkove.1.0.0'
-            $download = Get-ChildItem $downloadDir -Filter '*-setup.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($download) {
-              $probe = Start-Process -FilePath $download.FullName -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-' -PassThru
-              if ($probe.WaitForExit(30000)) { Write-Host "Direct downloaded installer exit code: $($probe.ExitCode)" }
-              else { Stop-Process -Id $probe.Id -Force -ErrorAction SilentlyContinue; Write-Host 'Direct downloaded installer timed out' }
-            }
             throw 'WinGet installation timed out'
           }
           Get-Content $stdout, $stderr -ErrorAction SilentlyContinue | Write-Host
