@@ -1,0 +1,8 @@
+server_script
+net_listen_multi "127.0.0.1" 38477 2
+net_receive_from client_id message
+net_send_to $client_id $message
+net_receive_from client_id_2 message_2
+net_send_to $client_id_2 $message_2
+net_broadcast "ready"
+net_close

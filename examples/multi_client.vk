@@ -1,0 +1,8 @@
+local_script
+net_connect "127.0.0.1" 38477
+net_send "hello from a client"
+net_receive response
+net_receive status
+out $response
+out $status
+net_close

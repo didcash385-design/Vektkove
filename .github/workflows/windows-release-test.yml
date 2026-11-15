@@ -1,0 +1,46 @@
+name: Windows release smoke tests
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            architecture: x64
+          - runner: windows-11-arm
+            architecture: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Download release archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = "https://github.com/${{ github.repository }}/releases/download/v1.0.0/vektkove-1.0.0-windows-${{ matrix.architecture }}.zip"
+          Invoke-WebRequest -Uri $url -OutFile vektkove.zip
+          Expand-Archive vektkove.zip -DestinationPath package
+      - name: Test compiler and runner
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vk = Join-Path $PWD 'package/vk.exe'
+          $version = & $vk --version
+          if ($LASTEXITCODE -ne 0 -or $version -ne 'Vektkove 1.0.0') { throw 'Version check failed' }
+          & $vk --help
+          if ($LASTEXITCODE -ne 0) { throw 'Help check failed' }
+          $source = Join-Path $PWD 'package/examples/hello.vk'
+          $bytecode = Join-Path $PWD 'hello.vkb'
+          & $vk compile $source $bytecode
+          if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
+          $output = & $vk run $bytecode
+          if ($LASTEXITCODE -ne 0 -or ($output -join "`n") -ne "Hello from Vektkove`n5") { throw 'Bytecode execution failed' }
+          $sourceOutput = & $vk run $source
+          if ($LASTEXITCODE -ne 0 -or ($sourceOutput -join "`n") -ne "Hello from Vektkove`n5") { throw 'Source execution failed' }

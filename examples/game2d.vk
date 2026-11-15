@@ -1,0 +1,25 @@
+set frames 0
+set hits 0
+import ui
+window "Orb Runner" 640 400
+ui_scene2d 0 0 640 400
+ui_circle2d "player" 48 180 36 "#32C8B2"
+ui_physics2d "player" 0 0.25
+ui_rect2d "orb" 420 150 28 28 "#FF7059"
+ui_physics2d "orb" 1 0.8
+ui_gravity2d 0 180
+ui_velocity2d "orb" -52 31
+ui_keymove2d "player" "a" -14 0
+ui_keymove2d "player" "d" 14 0
+ui_keymove2d "player" "w" 0 -14
+ui_keymove2d "player" "s" 0 14
+ui_frame2d
+add frames 1
+if $collision hit
+jump frame_done
+label hit
+add hits 1
+ui_force2d "orb" -40 -18
+label frame_done
+ui_end_frame2d
+halt

@@ -1,0 +1,7 @@
+# Vektkove source is compiled into bytecode before it runs.
+text greeting "Hello from Vektkove"
+out $greeting
+set total 2
+add total 3
+out $total
+halt

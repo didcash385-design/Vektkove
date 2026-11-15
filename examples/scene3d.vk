@@ -1,0 +1,14 @@
+import ui
+window "Orbit Demo" 760 560
+ui_scene3d 20 20 720 500
+ui_camera3d 0 0 14
+ui_light3d 4 7 9 1000
+ui_box3d 0 0 0 2 2 2 "#F15B40"
+ui_id "hero"
+ui_spin3d "hero" 5
+ui_sphere3d 3 0 0 1 "#38A6D8"
+ui_cylinder3d -3 0 0 0.8 2 "#54B87A"
+ui_cone3d 0 3 0 0 1 2 "#F3B63F"
+ui_torus3d 0 -3 0 1.1 0.25 "#8B75D7"
+ui_plane3d 0 0 -3 10 8 "#7695A8"
+halt

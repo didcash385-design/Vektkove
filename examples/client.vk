@@ -1,0 +1,6 @@
+local_script
+net_connect "127.0.0.1" 38476
+net_send "hello from Vektkove"
+net_receive response
+out $response
+net_close

@@ -1,0 +1,6 @@
+server_script
+net_listen "127.0.0.1" 38476
+net_receive incoming
+out $incoming
+net_send "ack"
+net_close

@@ -1,0 +1,6 @@
+import ui
+window "My first Vektkove window" 480 300
+ui_label "Welcome to Vektkove" 24 24 300 30
+ui_input "Your name" 24 70 220 30
+ui_button "Say hello" 24 120 140 32 "Hello, {input}!"
+halt
