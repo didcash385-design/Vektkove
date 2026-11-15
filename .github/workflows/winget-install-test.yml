@@ -1,0 +1,51 @@
+name: WinGet manifest install test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: windows-2025
+    steps:
+      - name: Download the submitted manifest
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifest = Join-Path $env:RUNNER_TEMP 'vektkove-manifest'
+          New-Item -ItemType Directory -Path $manifest -Force | Out-Null
+          $base = 'https://raw.githubusercontent.com/didcash385-design/winget-pkgs/vektkove-1.0.0/manifests/v/VCCcash/Vektkove/1.0.0'
+          $files = @('VCCcash.Vektkove.yaml', 'VCCcash.Vektkove.locale.en-US.yaml', 'VCCcash.Vektkove.installer.yaml')
+          foreach ($file in $files) {
+            Invoke-WebRequest -Uri "$base/$file" -OutFile (Join-Path $manifest $file)
+          }
+      - name: Validate and install with WinGet
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifest = Join-Path $env:RUNNER_TEMP 'vektkove-manifest'
+          winget --version
+          if ($LASTEXITCODE -ne 0) { throw 'WinGet is unavailable' }
+          winget settings --enable LocalManifestFiles
+          if ($LASTEXITCODE -ne 0) { throw 'Could not enable local manifests' }
+          winget validate --manifest $manifest
+          if ($LASTEXITCODE -ne 0) { throw 'WinGet manifest validation failed' }
+          winget install --manifest $manifest --scope user --accept-package-agreements --accept-source-agreements --disable-interactivity
+          if ($LASTEXITCODE -ne 0) { throw 'WinGet manifest installation failed' }
+      - name: Run installed terminal command
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $links = Join-Path $env:LOCALAPPDATA 'Microsoft/WinGet/Links'
+          $env:PATH = "$links;$env:PATH"
+          $command = Get-Command vk.exe -ErrorAction Stop
+          Write-Host "Installed command: $($command.Source)"
+          $version = & $command.Source --version
+          if ($LASTEXITCODE -ne 0 -or $version -ne 'Vektkove 1.0.0') { throw 'Installed vk --version failed' }
+          $example = Join-Path $env:RUNNER_TEMP 'hello.vk'
+          Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/didcash385-design/Vektkove/v1.0.0/examples/hello.vk' -OutFile $example
+          $output = & $command.Source run $example
+          if ($LASTEXITCODE -ne 0 -or ($output -join "`n") -ne "Hello from Vektkove`n5") { throw 'Installed vk run failed' }
+          Write-Host 'WinGet install and installed vk commands passed.'
