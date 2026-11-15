@@ -24,8 +24,8 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-            Install-PackageProvider -Name NuGet -Force | Out-Null
-            Install-Module -Name Microsoft.WinGet.Client -Scope CurrentUser -Force -Repository PSGallery | Out-Null
+            Install-PSResource -Name Microsoft.WinGet.Client -Scope CurrentUser -TrustRepository -Quiet
+            Import-Module Microsoft.WinGet.Client
             Repair-WinGetPackageManager -Force -Latest
           }
           Join-Path $env:LOCALAPPDATA 'Microsoft/WindowsApps' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -56,8 +56,20 @@ jobs:
           if ($validationExit -ne 0 -and $validation -notmatch 'Manifest validation succeeded with warnings') {
             throw "WinGet manifest validation failed with exit code $validationExit"
           }
-          winget install --manifest $manifest --architecture ${{ matrix.architecture }} --scope user --accept-package-agreements --accept-source-agreements --disable-interactivity
-          if ($LASTEXITCODE -ne 0) { throw 'WinGet manifest installation failed' }
+          $stdout = Join-Path $env:RUNNER_TEMP 'winget-output.txt'
+          $stderr = Join-Path $env:RUNNER_TEMP 'winget-errors.txt'
+          $arguments = @('install', '--manifest', "`"$manifest`"", '--architecture', '${{ matrix.architecture }}', '--scope', 'user', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity', '--verbose-logs')
+          $process = Start-Process -FilePath (Get-Command winget).Source -ArgumentList $arguments -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+          if (-not $process.WaitForExit(60000)) {
+            Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'winget|setup|vektkove' } | Select-Object Name, CommandLine | Format-List | Out-String | Write-Host
+            Get-Content $stdout, $stderr -ErrorAction SilentlyContinue | Write-Host
+            $logDir = Join-Path $env:LOCALAPPDATA 'Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/DiagOutputDir'
+            Get-ChildItem $logDir -Filter '*.log' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1 | Get-Content -Tail 100 | Write-Host
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            throw 'WinGet installation timed out'
+          }
+          Get-Content $stdout, $stderr -ErrorAction SilentlyContinue | Write-Host
+          if ($process.ExitCode -ne 0) { throw "WinGet manifest installation failed: $($process.ExitCode)" }
       - name: Run installed terminal command
         shell: pwsh
         run: |
