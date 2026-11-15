@@ -26,6 +26,7 @@ jobs:
             $archive = Join-Path $env:RUNNER_TEMP "$architecture.zip"
             Invoke-WebRequest -Uri $url -OutFile $archive
             Expand-Archive $archive -DestinationPath $env:VK_SOURCE_DIR
+            Copy-Item portable/WINDOWS.md (Join-Path $env:VK_SOURCE_DIR 'WINDOWS.md') -Force
             & $compiler portable/windows-installer.iss
             if ($LASTEXITCODE -ne 0) { throw "Installer build failed for $architecture" }
           }

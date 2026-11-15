@@ -43,7 +43,8 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $links = Join-Path $env:LOCALAPPDATA 'Microsoft/WinGet/Links'
-          $env:PATH = "$links;$env:PATH"
+          $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+          $env:PATH = "$links;$userPath;$env:PATH"
           $command = Get-Command vk.exe -ErrorAction Stop
           Write-Host "Installed command: $($command.Source)"
           $version = & $command.Source --version
