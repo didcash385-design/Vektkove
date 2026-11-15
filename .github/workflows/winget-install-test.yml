@@ -30,8 +30,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'WinGet is unavailable' }
           winget settings --enable LocalManifestFiles
           if ($LASTEXITCODE -ne 0) { throw 'Could not enable local manifests' }
-          winget validate --manifest $manifest
-          if ($LASTEXITCODE -ne 0) { throw 'WinGet manifest validation failed' }
+          $validation = winget validate --manifest $manifest 2>&1 | Out-String
+          $validationExit = $LASTEXITCODE
+          Write-Host $validation
+          if ($validationExit -ne 0 -and $validation -notmatch 'Manifest validation succeeded with warnings') {
+            throw "WinGet manifest validation failed with exit code $validationExit"
+          }
           winget install --manifest $manifest --scope user --accept-package-agreements --accept-source-agreements --disable-interactivity
           if ($LASTEXITCODE -ne 0) { throw 'WinGet manifest installation failed' }
       - name: Run installed terminal command
