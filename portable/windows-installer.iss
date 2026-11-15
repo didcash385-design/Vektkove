@@ -30,12 +30,17 @@ function EditPath(const OriginalPath, Directory: String; RemoveDirectory: Boolea
 var
   Remaining, Entry: String;
   Separator: Integer;
-  Found: Boolean;
+  Found, HasEntry: Boolean;
 begin
   Result := '';
   Remaining := OriginalPath;
   Found := False;
-  while Remaining <> '' do begin
+  HasEntry := False;
+  if Remaining = '' then begin
+    if not RemoveDirectory then Result := Directory;
+    Exit;
+  end;
+  while True do begin
     Separator := Pos(';', Remaining);
     if Separator = 0 then begin
       Entry := Remaining;
@@ -46,14 +51,16 @@ begin
     end;
     if CompareText(RemoveBackslashUnlessRoot(Trim(Entry)), RemoveBackslashUnlessRoot(Directory)) = 0 then begin
       Found := True;
-      if RemoveDirectory then Continue;
+    end else if RemoveDirectory then begin
+      if HasEntry then Result := Result + ';';
+      Result := Result + Entry;
+      HasEntry := True;
     end;
-    if Result <> '' then Result := Result + ';';
-    Result := Result + Entry;
+    if Separator = 0 then Break;
   end;
-  if not RemoveDirectory and not Found then begin
-    if Result <> '' then Result := Result + ';';
-    Result := Result + Directory;
+  if not RemoveDirectory then begin
+    Result := OriginalPath;
+    if not Found then Result := Result + ';' + Directory;
   end;
 end;
 

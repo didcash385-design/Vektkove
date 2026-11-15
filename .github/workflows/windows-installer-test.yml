@@ -72,4 +72,12 @@ jobs:
           if (Test-Path (Join-Path $installDir 'vk.exe')) { throw 'Uninstaller left vk.exe behind' }
           $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
           if (($userPath -split ';') -contains $installDir) { throw 'Uninstaller left Vektkove in the user PATH' }
+          [Environment]::SetEnvironmentVariable('Path', "$userPath;$installDir", 'User')
+          $process = Start-Process -FilePath $installer -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-' -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw 'Reinstallation with a preexisting PATH entry failed' }
+          $process = Start-Process -FilePath $uninstaller -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw 'Second uninstall failed' }
+          $preservedPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+          if (($preservedPath -split ';') -notcontains $installDir) { throw 'Uninstaller removed a preexisting PATH entry' }
+          [Environment]::SetEnvironmentVariable('Path', $userPath, 'User')
           Write-Host 'Installer, terminal command, and uninstaller passed.'
