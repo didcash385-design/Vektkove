@@ -22,7 +22,8 @@ Portable ZIP archives are also available. Extract the appropriate archive and ru
 
 To run the portable `vk` from any directory, add the directory containing `vk.exe`
 to your user PATH. The installer removes its own PATH entry when uninstalled.
-WinGet installation will be available once the package is published.
+The WinGet submission is under review; automated WinGet installer tests have not
+yet passed. The setup executables are unsigned, so Windows may show a warning.
 
 The Windows builds do not include the macOS editor, launcher, UI Maker, or graphical
 rendering. UI instructions are validated but cannot display windows. VKLINK chat is
