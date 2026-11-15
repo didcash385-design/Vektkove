@@ -8,7 +8,15 @@ permissions:
 
 jobs:
   install:
-    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            architecture: x64
+          - runner: windows-11-arm
+            architecture: arm64
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Download the submitted manifest
         shell: pwsh
@@ -36,7 +44,7 @@ jobs:
           if ($validationExit -ne 0 -and $validation -notmatch 'Manifest validation succeeded with warnings') {
             throw "WinGet manifest validation failed with exit code $validationExit"
           }
-          winget install --manifest $manifest --scope user --accept-package-agreements --accept-source-agreements --disable-interactivity
+          winget install --manifest $manifest --architecture ${{ matrix.architecture }} --scope user --accept-package-agreements --accept-source-agreements --disable-interactivity
           if ($LASTEXITCODE -ne 0) { throw 'WinGet manifest installation failed' }
       - name: Run installed terminal command
         shell: pwsh
